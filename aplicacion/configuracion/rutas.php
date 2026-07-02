@@ -82,6 +82,13 @@ $enrutador->post('/caja/cerrar', 'CajaControlador@cerrar', ['Empleado']);
 $enrutador->get('/caja/movimientos', 'CajaControlador@movimientos', ['Empleado']);
 
 // ============================================================
+// RUTAS DE CAJA - CONFIGURACIÓN (SOLO ADMIN)
+// ============================================================
+
+$enrutador->get('/caja/configurar', 'CajaControlador@configurar', ['Administrador']);
+$enrutador->post('/caja/configurar/guardar', 'CajaControlador@guardarConfiguracion', ['Administrador']);
+
+// ============================================================
 // RUTAS DE USUARIOS (SOLO ADMIN)
 // ============================================================
 

@@ -67,6 +67,12 @@
                         <span>Reportes</span>
                     </a>
                 </li>
+                <li>
+                    <a href="<?php echo URL_BASE; ?>/caja/configurar" class="<?php echo ($activo ?? '') == 'configurar_caja' ? 'activo' : ''; ?>">
+                        <i class="bi bi-gear-fill"></i>
+                        <span>Configurar Caja</span>
+                    </a>
+                </li>
             <?php endif; ?>
 
             <?php if ($idRol == 2): ?>

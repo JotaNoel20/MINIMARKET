@@ -164,6 +164,25 @@ class ProductoControlador extends Controlador
     }
 
     /**
+     * Muestra el detalle de un producto
+     */
+    public function ver($id)
+    {
+        $this->verificarAdmin();
+
+        $producto = new Producto();
+        $datosProducto = $producto->obtenerPorId($id);
+
+        if (!$datosProducto) {
+            $this->redirigir('/productos?error=404');
+        }
+
+        return $this->vista('productos/ver', [
+            'producto' => $datosProducto
+        ]);
+    }
+
+    /**
      * Elimina (desactiva) un producto
      */
     public function eliminar($id)

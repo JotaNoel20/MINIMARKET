@@ -1,77 +1,78 @@
 <?php
-$titulo = 'Productos';
-$activo = 'productos';
+$titulo = 'Panel de Reportes';
+$activo = 'reportes';
 ob_start();
 ?>
 
 <div class="barra-superior">
-    <h2>Lista de Productos</h2>
-    <a href="<?php echo URL_BASE; ?>/productos/crear" class="boton boton-exito">
-        <i class="bi bi-plus-circle"></i> Nuevo Producto
-    </a>
+    <h2>Panel de Reportes y Estadísticas</h2>
 </div>
 
-<?php if (isset($_GET['success'])): ?>
-    <div class="alerta alerta-exito">
-        <?php
-            $mensajes = [
-                1 => 'Producto creado con éxito',
-                2 => 'Producto actualizado con éxito',
-                3 => 'Producto eliminado con éxito'
-            ];
-            echo $mensajes[$_GET['success']] ?? 'Operación exitosa';
-        ?>
+<div class="tarjeta-grid">
+    <div class="tarjeta tarjeta-kpi">
+        <div class="numero"><?php echo number_format($total_recaudado ?? 0, 2); ?></div>
+        <div>Total Recaudado</div>
     </div>
-<?php endif; ?>
+    <div class="tarjeta tarjeta-kpi">
+        <div class="numero"><?php echo $total_ventas ?? 0; ?></div>
+        <div>Ventas Totales</div>
+    </div>
+    <div class="tarjeta tarjeta-kpi">
+        <div class="numero"><?php echo $total_productos ?? 0; ?></div>
+        <div>Productos Activos</div>
+    </div>
+    <div class="tarjeta tarjeta-kpi" style="border-left-color:#d32f2f;">
+        <div class="numero" style="color:#d32f2f;"><?php echo $stock_bajo ?? 0; ?></div>
+        <div>Stock Bajo</div>
+    </div>
+</div>
 
-<div class="tarjeta">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:25px;margin-top:25px;">
+    <div class="tarjeta">
+        <h3>📈 Ventas del día</h3>
+        <p><strong>Ventas:</strong> <?php echo $ventas_hoy['total'] ?? 0; ?></p>
+        <p><strong>Recaudado:</strong> Bs. <?php echo number_format($ventas_hoy['recaudado'] ?? 0, 2); ?></p>
+    </div>
+    <div class="tarjeta">
+        <h3>📊 Ventas de la semana</h3>
+        <p><strong>Ventas:</strong> <?php echo $ventas_semana['total'] ?? 0; ?></p>
+        <p><strong>Recaudado:</strong> Bs. <?php echo number_format($ventas_semana['recaudado'] ?? 0, 2); ?></p>
+    </div>
+</div>
+
+<div class="tarjeta" style="margin-top:25px;">
+    <h3>🏆 Productos más vendidos</h3>
     <table class="tabla">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Nombre</th>
+                <th>Producto</th>
                 <th>Categoría</th>
-                <th>Precio Venta</th>
-                <th>Stock</th>
-                <th>Acciones</th>
+                <th>Unidades</th>
+                <th>Recaudado</th>
             </tr>
         </thead>
         <tbody>
-            <?php if (empty($productos)): ?>
-                <tr>
-                    <td colspan="6" style="text-align:center;color:#999;">No hay productos registrados</td>
-                </tr>
+            <?php if (empty($productos_top)): ?>
+                <tr><td colspan="4" style="text-align:center;color:#999;">Sin datos</td></tr>
             <?php else: ?>
-                <?php foreach ($productos as $prod): ?>
+                <?php foreach ($productos_top as $p): ?>
                     <tr>
-                        <td><?php echo $prod['id_producto']; ?></td>
-                        <td><?php echo htmlspecialchars($prod['nombre']); ?></td>
-                        <td><?php echo htmlspecialchars($prod['categoria_nombre']); ?></td>
-                        <td>Bs. <?php echo number_format($prod['precio_venta'], 2); ?></td>
-                        <td>
-                            <span style="<?php echo $prod['stock_actual'] <= $prod['stock_minimo'] ? 'color:#d32f2f;font-weight:bold;' : ''; ?>">
-                                <?php echo $prod['stock_actual']; ?>
-                            </span>
-                        </td>
-                        <td>
-                            <a href="<?php echo URL_BASE; ?>/productos/ver/<?php echo $prod['id_producto']; ?>" class="boton-accion" style="color:#0288d1;">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a href="<?php echo URL_BASE; ?>/productos/editar/<?php echo $prod['id_producto']; ?>" class="boton-accion" style="color:#f57c00;">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <form action="<?php echo URL_BASE; ?>/productos/eliminar/<?php echo $prod['id_producto']; ?>" method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar este producto?')">
-                                <input type="hidden" name="csrf_token" value="<?php echo \App\Nucleo\Seguridad::generarTokenCSRF(); ?>">
-                                <button type="submit" class="boton-accion" style="color:#d32f2f;border:none;background:none;cursor:pointer;">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </td>
+                        <td><?php echo htmlspecialchars($p['nombre']); ?></td>
+                        <td><?php echo htmlspecialchars($p['categoria']); ?></td>
+                        <td><?php echo $p['total_unidades']; ?></td>
+                        <td>Bs. <?php echo number_format($p['total_recaudado'], 2); ?></td>
                     </tr>
                 <?php endforeach; ?>
             <?php endif; ?>
         </tbody>
     </table>
+</div>
+
+<div style="display:flex;gap:15px;flex-wrap:wrap;margin-top:25px;">
+    <a href="<?php echo URL_BASE; ?>/reportes/ventas" class="boton boton-primario">📄 Reporte de Ventas</a>
+    <a href="<?php echo URL_BASE; ?>/reportes/inventario" class="boton boton-primario">📦 Reporte de Inventario</a>
+    <a href="<?php echo URL_BASE; ?>/reportes/caja" class="boton boton-primario">💰 Reporte de Caja</a>
+    <a href="<?php echo URL_BASE; ?>/reportes/ganancias" class="boton boton-primario">📈 Reporte de Ganancias</a>
 </div>
 
 <?php

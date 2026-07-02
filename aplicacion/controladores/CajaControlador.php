@@ -46,15 +46,6 @@ class CajaControlador extends Controlador
             die('Token CSRF inválido');
         }
 
-        $validacion = new Validacion();
-        $validacion->validar($_POST, [
-            'saldo_inicial' => 'required|numeric|min:0'
-        ]);
-
-        if ($validacion->falla()) {
-            $this->redirigir('/caja?error=' . urlencode($validacion->primerError()));
-        }
-
         $caja = new Caja();
         $idUsuario = $this->sesion->get('id_usuario');
 
@@ -64,7 +55,15 @@ class CajaControlador extends Controlador
             $this->redirigir('/caja?error=2');
         }
 
-        $resultado = $caja->abrir($idUsuario, $_POST['saldo_inicial']);
+        // ✅ Obtener el monto general configurado para hoy
+        $montoGeneral = $caja->obtenerMontoGeneral();
+        
+        // Si no hay monto general configurado, usar 0
+        if ($montoGeneral === null) {
+            $this->redirigir('/caja?error=6'); // Error: no hay configuración
+        }
+
+        $resultado = $caja->abrir($idUsuario, $montoGeneral);
 
         if ($resultado) {
             $this->redirigir('/caja?success=1');
@@ -118,6 +117,54 @@ class CajaControlador extends Controlador
         ]);
     }
 
+    /**
+     * Configurar el monto general del día (Solo Admin)
+     */
+    public function configurar()
+    {
+        $this->verificarAdmin();
+
+        $caja = new Caja();
+        $montoActual = $caja->obtenerMontoGeneral();
+        $historial = $caja->obtenerHistorialMontos();
+
+        return $this->vista('caja/configurar', [
+            'monto_actual' => $montoActual ?? 0,
+            'historial' => $historial,
+            'csrf_token' => Seguridad::generarTokenCSRF()
+        ]);
+    }
+
+    /**
+     * Guardar la configuración del monto general (Solo Admin)
+     */
+    public function guardarConfiguracion()
+    {
+        $this->verificarAdmin();
+
+        if (!Seguridad::validarTokenCSRF($_POST['csrf_token'] ?? '')) {
+            die('Token CSRF inválido');
+        }
+
+        $validacion = new Validacion();
+        $validacion->validar($_POST, [
+            'monto' => 'required|numeric|min:0'
+        ]);
+
+        if ($validacion->falla()) {
+            $this->redirigir('/caja/configurar?error=' . urlencode($validacion->primerError()));
+        }
+
+        $caja = new Caja();
+        $resultado = $caja->guardarMontoGeneral($_POST['monto'], $this->sesion->get('id_usuario'));
+
+        if ($resultado) {
+            $this->redirigir('/caja/configurar?success=1');
+        } else {
+            $this->redirigir('/caja/configurar?error=1');
+        }
+    }
+
     private function verificarEmpleado()
     {
         if (!$this->sesion->existe('id_usuario')) {
@@ -126,6 +173,17 @@ class CajaControlador extends Controlador
 
         $rol = $this->sesion->get('id_rol');
         if ($rol != 1 && $rol != 2) {
+            $this->redirigir('/panel');
+        }
+    }
+
+    private function verificarAdmin()
+    {
+        if (!$this->sesion->existe('id_usuario')) {
+            $this->redirigir('/login');
+        }
+
+        if ($this->sesion->get('id_rol') != 1) {
             $this->redirigir('/panel');
         }
     }
