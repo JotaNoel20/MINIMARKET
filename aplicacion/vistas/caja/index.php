@@ -28,7 +28,8 @@ ob_start();
                 2 => 'Ya tienes una caja abierta',
                 3 => 'Error al abrir la caja',
                 4 => 'No hay caja abierta para cerrar',
-                5 => 'Error al cerrar la caja'
+                5 => 'Error al cerrar la caja',
+                6 => 'No hay monto general configurado. Contacte al administrador.'
             ];
             echo $mensajes[$_GET['error']] ?? 'Error en la operación';
         ?>
@@ -97,18 +98,14 @@ ob_start();
     </div>
 
 <?php else: ?>
-    <!-- Sin caja abierta - FORMULARIO EN LA MISMA VISTA -->
+    <!-- Sin caja abierta -->
     <div class="tarjeta" style="text-align:center;padding:40px;">
         <i class="bi bi-cash-stack" style="font-size:64px;color:#999;"></i>
         <h3 style="margin:15px 0;color:#666;">No hay caja abierta</h3>
-        <p style="color:#999;">Abre una caja para comenzar a registrar movimientos.</p>
+        <p style="color:#999;">Para abrir la caja, el administrador debe configurar el monto general del día.</p>
         <form action="<?php echo URL_BASE; ?>/caja/abrir" method="POST" style="display:inline-block;margin-top:15px;">
             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;">
-                <label for="saldo_inicial">Saldo Inicial:</label>
-                <input type="number" id="saldo_inicial" name="saldo_inicial" class="campo" step="0.01" min="0" value="0.00" style="width:150px;" required>
-                <button type="submit" class="boton boton-exito">Abrir Caja</button>
-            </div>
+            <button type="submit" class="boton boton-exito">Abrir Caja</button>
         </form>
     </div>
 <?php endif; ?>

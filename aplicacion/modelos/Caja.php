@@ -68,11 +68,10 @@ class Caja extends Modelo
     }
 
     /**
-     * Actualiza los ingresos de la caja (CORREGIDO)
+     * Actualiza los ingresos de la caja
      */
     public function actualizarIngresos($idCaja, $monto)
     {
-        // ✅ Usamos los valores directamente en la SQL para evitar problemas con placeholders duplicados
         $sql = "UPDATE {$this->tabla} 
                 SET total_ingresos = total_ingresos + " . (float)$monto . ",
                     saldo_final = saldo_final + " . (float)$monto . "
@@ -80,6 +79,54 @@ class Caja extends Modelo
         
         $stmt = $this->bd->consultar($sql);
         return true;
+    }
+
+    /**
+     * Obtiene el monto general configurado para hoy
+     */
+    public function obtenerMontoGeneral()
+    {
+        $sql = "SELECT valor FROM configuracion 
+                WHERE clave = 'monto_general_caja' 
+                ORDER BY fecha_actualizacion DESC 
+                LIMIT 1";
+        $stmt = $this->bd->consultar($sql);
+        $resultado = $stmt->obtener();
+        return $resultado ? (float)$resultado['valor'] : null;
+    }
+
+    /**
+     * Guarda el monto general del día
+     */
+    public function guardarMontoGeneral($monto, $idUsuario)
+    {
+        // Primero eliminar la configuración anterior
+        $sqlDelete = "DELETE FROM configuracion WHERE clave = 'monto_general_caja'";
+        $this->bd->consultar($sqlDelete);
+
+        // Insertar nueva configuración
+        $sqlInsert = "INSERT INTO configuracion (clave, valor, creado_por) 
+                      VALUES ('monto_general_caja', :valor, :creado_por)";
+        $stmt = $this->bd->preparar($sqlInsert);
+        return $stmt->ejecutar([
+            'valor' => $monto,
+            'creado_por' => $idUsuario
+        ]);
+    }
+
+    /**
+     * Obtiene historial de montos configurados
+     */
+    public function obtenerHistorialMontos()
+    {
+        $sql = "SELECT c.*, u.nombre AS creado_por_nombre 
+                FROM configuracion c
+                LEFT JOIN usuario u ON c.creado_por = u.id_usuario
+                WHERE c.clave = 'monto_general_caja'
+                ORDER BY c.fecha_actualizacion DESC
+                LIMIT 10";
+        $stmt = $this->bd->consultar($sql);
+        return $stmt->obtenerTodos();
     }
 
     /**
